@@ -86,11 +86,12 @@ class KeychainManager(object):
         return self._filename
 
     def import_apple_cert(self, apple_cert_file_path):
-        return self._check_output(['security', 'import', apple_cert_file_path, '-k', self.filename])
+        return self._check_output(['security', '-v', 'import', apple_cert_file_path, '-k', self.filename])
 
     def import_rsa_key(self, rsa_file_path):
         return self._check_output([
             'security',
+            '-v',
             'import',
             rsa_file_path,
             '-P',
