@@ -183,7 +183,7 @@ class KeychainManager(object):
             output = process.communicate()[0]
             retcode = process.poll()
             if retcode:
-                raise subprocess.CalledProcessError(retcode, command)
+                raise subprocess.CalledProcessError(retcode, command, output=output)
         encoding = locale.getdefaultlocale()[1]
         return output.decode(encoding)
 
