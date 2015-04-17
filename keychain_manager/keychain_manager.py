@@ -25,16 +25,6 @@ FLAG_MAP = dict([
     ('service', 's'),
 ])
 
- # Exception classes used by this module.
-class CommandError(Exception):
-
-    def __init__(self, returncode, cmd, output=None):
-        self.returncode = returncode
-        self.cmd = cmd
-        self.output = output
-
-    def __str__(self):
-        return "Command '%s' returned non-zero exit status %d with output" % (self.cmd, self.returncode, self.output)
 
 class KeychainException(Exception):
     pass
@@ -193,7 +183,7 @@ class KeychainManager(object):
             output = process.communicate()[0]
             retcode = process.poll()
             if retcode:
-                raise CommandError(retcode, command, output=output)
+                raise subprocess.CalledProcessError(retcode, command, output=output)
         encoding = locale.getdefaultlocale()[1]
         return output.decode(encoding)
 
