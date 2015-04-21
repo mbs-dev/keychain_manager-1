@@ -57,7 +57,7 @@ class KeychainManager(object):
     def exists(self):
         return self.filename
 
-    def export_identities(self, p12_file_path):
+    def export_identities(self, p12_file_path, password=''):
         self._call([
             'security',
             'export',
@@ -68,7 +68,7 @@ class KeychainManager(object):
             '-f',
             'pkcs12',
             '-P',
-            "",
+            password,
             '-o',
             p12_file_path
         ])
