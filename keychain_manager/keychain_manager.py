@@ -57,20 +57,20 @@ class KeychainManager(object):
     def exists(self):
         return self.filename
 
-    def export_identities(self, p12_file_path, password=''):
-        self._call([
-            'security',
-            'export',
-            '-k',
-            self.filename,
-            '-t',
-            'identities',
-            '-f',
+    @staticmethod
+    def export_identities(rsa_key_path, cert_key_path, p12_file_path, password=''):
+        KeychainManager._call([
+            'openssl',
             'pkcs12',
-            '-P',
-            password,
-            '-o',
-            p12_file_path
+            '-export',
+            '-inkey',
+            rsa_key_path,
+            '-in',
+            cert_key_path,
+            '-out',
+            p12_file_path,
+            '-password',
+            'pass:%s' % password
         ])
 
     @property
@@ -166,12 +166,13 @@ class KeychainManager(object):
                 "-g",
             ] + self._flags_for_options(options)))
 
-    @classmethod
-    def _call(self, command):
+
+    @staticmethod
+    def _call(command):
         subprocess.call(command)
 
-    @classmethod
-    def _check_output(self, command):
+    @staticmethod
+    def _check_output(command):
         if hasattr(subprocess, 'check_output'):
             output = subprocess.check_output(command, stderr=subprocess.STDOUT)
         else:
@@ -187,13 +188,13 @@ class KeychainManager(object):
         encoding = locale.getdefaultlocale()[1]
         return output.decode(encoding)
 
-    @classmethod
-    def generate_rsa_key(self, rsa_file_path, keysize=2048):
-        return self._check_output(['openssl', 'genrsa', '-out', rsa_file_path, str(keysize)])
+    @staticmethod
+    def generate_rsa_key(rsa_file_path, keysize=2048):
+        return KeychainManager._check_output(['openssl', 'genrsa', '-out', rsa_file_path, str(keysize)])
 
-    @classmethod
-    def generate_cert_request(self, email, country, rsa_file_path, cert_file_path):
-        self._call([
+    @staticmethod
+    def generate_cert_request(email, country, rsa_file_path, cert_file_path):
+        KeychainManager._call([
             'openssl',
             'req',
             '-new',
@@ -205,7 +206,6 @@ class KeychainManager(object):
             '/CN=%s, C=%s' % (email, country)
         ])
 
-    @classmethod
     def convert_p12_to_pem(self, p12_file_path, pem_file_path):
         self._call([
             'openssl',
@@ -219,12 +219,12 @@ class KeychainManager(object):
             pem_file_path
         ])
 
-    @classmethod
-    def _keychains_from_output(self, output):
+    @staticmethod
+    def _keychains_from_output(output):
         return [fname.strip('" ') for fname in output.split('\n') if fname]
 
-    @classmethod
-    def _password_from_output(self, output):
+    @staticmethod
+    def _password_from_output( output):
         result = {}
         for line in output.split('\n'):
             m1 = KEYCHAIN_RE.match(line)
@@ -250,10 +250,31 @@ class KeychainManager(object):
                     )
             )))
 
-    @classmethod
-    def default_keychain(self):
-        return self._keychains_from_output(self._check_output(['security', 'default-keychain']))[0]
+    @staticmethod
+    def default_keychain():
+        return KeychainManager._keychains_from_output(KeychainManager._check_output(['security', 'default-keychain']))[0]
 
     @classmethod
     def login_keychain(self):
         return self._keychains_from_output(self._check_output(['security', 'login-keychain']))[0]
+
+    @staticmethod
+    def transform_der_to_pem(cert_path):
+        basename = os.path.splitext(cert_path)[0]
+
+        pem_filepath = basename + '.pem'
+
+        KeychainManager._check_output(
+            ['openssl',
+             'x509',
+             '-in',
+             cert_path,
+             '-inform',
+             'DER',
+             '-out',
+             pem_filepath,
+             '-outform',
+             'PEM']
+        )
+
+        return pem_filepath

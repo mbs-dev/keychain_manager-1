@@ -147,6 +147,18 @@ class TestKeychain_manager(unittest.TestCase):
         )
         kcm.delete()
 
+    def test_should_transform_binary_der_format_to_ascii_pem(self):
+        pem_path = KeychainManager.transform_der_to_pem('ios_distribution.cer')
+
+        with open(pem_path) as f:
+            content = f.readlines()
+
+        self.assertEquals('-----BEGIN CERTIFICATE-----\n', content[0])
+        self.assertEquals('-----END CERTIFICATE-----\n', content[-1])
+        self.assertEquals(len(content), 33)
+
+
+
     def tearDown(self):
         pass
 
