@@ -3,6 +3,6 @@
 
 __author__ = 'Andrii Kurinnyi'
 __email__ = 'andrew@marpasoft.com'
-__version__ = '0.1.4'
+__version__ = '0.1.5'
 
 from .keychain_manager import KeychainManager, KeychainException  # NOQA
