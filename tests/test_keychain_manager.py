@@ -157,7 +157,15 @@ class TestKeychain_manager(unittest.TestCase):
         self.assertEquals('-----END CERTIFICATE-----\n', content[-1])
         self.assertEquals(len(content), 33)
 
+    def test_should_get_common_name_from_pem_cert(self):
+        common_name = KeychainManager.get_common_name('ios_distribution.pem')
 
+        self.assertEquals('iPhone Distribution: Andrey Samohin (77GG9C5M2S)', common_name)
+
+    #TODO Make a test
+    # def test_should_create_p12(self):
+    #
+    #     KeychainManager.export_identities('rsa.key', 'ios_distribution.pem', 'apple.p12', 'qwe123')
 
     def tearDown(self):
         pass

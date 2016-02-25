@@ -59,6 +59,8 @@ class KeychainManager(object):
 
     @staticmethod
     def export_identities(rsa_key_path, cert_key_path, p12_file_path, password=''):
+        cert_common_name = KeychainManager.get_common_name(cert_key_path)
+
         KeychainManager._call([
             'openssl',
             'pkcs12',
@@ -70,7 +72,9 @@ class KeychainManager(object):
             '-out',
             p12_file_path,
             '-password',
-            'pass:%s' % password
+            'pass:%s' % password,
+            '-name',
+            cert_common_name
         ])
 
     @property
@@ -166,6 +170,21 @@ class KeychainManager(object):
                 "-g",
             ] + self._flags_for_options(options)))
 
+    @staticmethod
+    def get_common_name(cert_path):
+        subject = KeychainManager._check_output([
+            'openssl',
+            'x509',
+            '-in',
+            cert_path,
+            '-subject',
+            '-noout'
+        ])
+
+        #subject= /UID=77GG9C5M2S/CN=iPhone Distribution: Andrey Samohin (77GG9C5M2S)/OU=77GG9C5M2S/O=Andrey Samohin/C=US
+        common_name_field = next(field for field in subject.split('/') if field.startswith('CN=')).split('=')[1]
+
+        return common_name_field
 
     @staticmethod
     def _call(command):
