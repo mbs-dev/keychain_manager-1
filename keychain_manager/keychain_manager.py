@@ -105,7 +105,7 @@ class KeychainManager(object):
         ])
 
     def _flags_for_options(self, options):
-        flags = [['-'+FLAG_MAP[key], value] for key, value in options.items()]
+        flags = [['-' + FLAG_MAP[key], value] for key, value in options.items()]
         return [item for sublist in flags for item in sublist] + [self.filename]
 
     def add_internet_password(self, account, server, password, **kwargs):
@@ -181,8 +181,11 @@ class KeychainManager(object):
             '-noout'
         ])
 
-        #subject= /UID=77GG9C5M2S/CN=iPhone Distribution: Andrey Samohin (77GG9C5M2S)/OU=77GG9C5M2S/O=Andrey Samohin/C=US
-        common_name_field = next(field for field in subject.split('/') if field.startswith('CN=')).split('=')[1]
+        # subject= /UID=77GG9C5M2S/CN=iPhone Distribution: Andrey Samohin (77GG9C5M2S)/OU=77GG9C5M2S/O=Andrey Samohin/C=US
+        try:
+            common_name_field = next(field for field in subject.split('/') if field.startswith('CN=')).split('=')[1]
+        except StopIteration:
+            common_name_field = next(field for field in subject.split(',') if 'CN =' in field).split('=')[1]
 
         return common_name_field
 
@@ -243,7 +246,7 @@ class KeychainManager(object):
         return [fname.strip('" ') for fname in output.split('\n') if fname]
 
     @staticmethod
-    def _password_from_output( output):
+    def _password_from_output(output):
         result = {}
         for line in output.split('\n'):
             m1 = KEYCHAIN_RE.match(line)
@@ -266,12 +269,14 @@ class KeychainManager(object):
                 filter(
                     lambda x: not x.startswith('.'),
                     os.listdir(os.path.expanduser('~/Library/Keychains/'))
-                    )
+                )
             )))
 
     @staticmethod
     def default_keychain():
-        return KeychainManager._keychains_from_output(KeychainManager._check_output(['security', 'default-keychain']))[0]
+        return KeychainManager._keychains_from_output(
+            KeychainManager._check_output(['security', 'default-keychain'])
+        )[0]
 
     @classmethod
     def login_keychain(self):
